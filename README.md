@@ -19,6 +19,6 @@ user=> (find-arg [2 3 4] map '% [1 2 3]) ; Finds a function to pass to a higher 
 
 ## License
 
-Copyright (C) 2011 [Joshua](https://github.com/jColeChanged), Alan Malloy, Anthony Grimes
+Copyright (C) 2011 [Joshua Cole](https://github.com/jColeChanged), [Alan Malloy](https://github.com/amalloy), [Anthony Grimes](https://github.com/Raynes)
 
 Distributed under the Eclipse Public License, the same as Clojure.
