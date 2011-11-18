@@ -4,7 +4,9 @@
             [clojure set string])
   (:import clojure.lang.LispReader$ReaderException))
 
-(def ^:dynamic *ns-set* "A set of namespaces where find-fn will look."
+(def ^{:dynamic true
+       :doc "A set of namespaces where find-fn will look."}
+  *ns-set*
   (map the-ns '#{clojure.core clojure.set clojure.string}))
 
 (defn- fn-name [var]
