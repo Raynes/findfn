@@ -17,7 +17,7 @@
                (meta var)))))
 
 (defn- filter-vars [testfn]
-  (for [f (remove (comp secure-tester :name meta)
+  (for [f (remove #(->> % meta :name (sb/unsafe? secure-tester))
                   (mapcat (comp vals ns-publics) *ns-set*))
         :when (try
                (sb/thunk-timeout
