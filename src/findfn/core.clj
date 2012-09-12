@@ -1,8 +1,8 @@
 (ns findfn.core
-  (:use [clojail.testers :only [secure-tester]])
   (:require [clojail.core :as sb]
             [clojure set string])
-  (:import clojure.lang.LispReader$ReaderException))
+  (:import clojure.lang.LispReader$ReaderException
+           java.io.StringWriter))
 
 (def ^{:dynamic true
        :doc "A set of namespaces where find-fn will look."}
@@ -17,30 +17,21 @@
                (meta var)))))
 
 (defn- filter-vars [testfn]
-  (for [f (remove #(->> % meta :name (sb/unsafe? secure-tester))
-                  (mapcat (comp vals ns-publics) *ns-set*))
+  (for [f (mapcat (comp vals ns-publics) *ns-set*)
         :when (try
-               (sb/thunk-timeout
-                #(binding [*out* (java.io.StringWriter.)]
-                   (testfn f))
-                50 :ms sb/eagerly-consume)
-               (catch Throwable _ nil))]
+                (testfn f)
+                (catch Throwable _ nil))]
     (fn-name f)))
 
 (defn find-fn
   "Takes expected output and expected input to produce that output and
    runs every single function and macro against the input, collecting the
    names of the ones that match the output."
-  [out & in]
-  (filter-vars
-   (fn [f]
-     (= out
-        (apply
-         (if (-> f meta :macro)
-           (fn [& args]
-             (eval `(~f ~@args)))
-           f)
-         in)))))
+  [tester out & in]
+  (let [sb (sb/sandbox tester :timeout 50)]
+    (filter-vars
+     (fn [f]
+       (= out (sb `(~f ~@in) {#'*out* (StringWriter.)}))))))
 
 (defn find-arg
   "Basically find-fn for finding functions to pass to higher order functions. out is
@@ -48,13 +39,15 @@
    arguments (supposedly a function) is replaced with %. find-arg will execute the function
    with those arguments, replacing the % argument with a different function each time collecting
    the functions that produce the correct output."
-  [out & in]
-  (filter-vars
-   (fn [f]
-     (when-not (-> f meta :macro)
-       (= out
-          (eval `(let [~'% ~f]
-                   (~@in))))))))
+  [tester out & in]
+  (let [sb (sb/sandbox tester :timeout 50)]
+    (filter-vars
+     (fn [f]
+       (when-not (-> f meta :macro)
+         (= out
+            (sb `(let [~'% ~f]
+                   (~@in))
+                {#'*out* (StringWriter.)})))))))
 
 (defn read-arg-string
   "From an input string like \"in1 in2 in3 out\", return a vector of [out
