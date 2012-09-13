@@ -9,7 +9,7 @@
 
 (deftest find-arg-test
   (testing "that it works"
-    (is (= (find-arg secure-tester ["a" "b" "c"] map '% [\a \b \c])
+    (is (= (find-arg secure-tester ["a" "b" "c"] 'map '% [\a \b \c])
            '[clojure.string/trim clojure.string/lower-case
              clojure.core/munge clojure.core/print-str clojure.core/str
              clojure.core/namespace-munge]))))

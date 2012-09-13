@@ -23,15 +23,22 @@
                 (catch Throwable _ nil))]
     (fn-name f)))
 
+(defn null-writer []
+  (proxy [java.io.Writer] []
+    (write ([b]) ([cbuf off len]))
+    (append ([c]) ([csq start end]))
+    (close [])
+    (flush [])))
+
 (defn find-fn
   "Takes expected output and expected input to produce that output and
    runs every single function and macro against the input, collecting the
    names of the ones that match the output."
   [tester out & in]
-  (let [sb (sb/sandbox tester :timeout 50)]
+  (let [sb (sb/sandbox tester :timeout 200)]
     (filter-vars
      (fn [f]
-       (= out (sb `(~f ~@in) {#'*out* (StringWriter.)}))))))
+       (= out (sb `(~f ~@in) {#'*out* (null-writer)}))))))
 
 (defn find-arg
   "Basically find-fn for finding functions to pass to higher order functions. out is
@@ -40,14 +47,14 @@
    with those arguments, replacing the % argument with a different function each time collecting
    the functions that produce the correct output."
   [tester out & in]
-  (let [sb (sb/sandbox tester :timeout 50)]
+  (let [sb (sb/sandbox tester :timeout 200)]
     (filter-vars
      (fn [f]
        (when-not (-> f meta :macro)
          (= out
             (sb `(let [~'% ~f]
                    (~@in))
-                {#'*out* (StringWriter.)})))))))
+                {#'*out* (null-writer)})))))))
 
 (defn read-arg-string
   "From an input string like \"in1 in2 in3 out\", return a vector of [out
