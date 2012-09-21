@@ -7,9 +7,11 @@ Basically, what it does is take input arguments and an expected output, and it t
 ```clojure
 user=> (use 'findfn.core)
 nil
-user=> (find-fn 6 3 3) ; 6 is the expected output and the 3s are the input
+user=> (use '[clojail.testers :only [secure-tester] :rename {secure-tester tester}])
+nil
+user=> (find-fn tester 6 3 3) ; 6 is the expected output and the 3s are the input
 (clojure.core/+ clojure.core/unchecked-add clojure.core/+' clojure.core/unchecked-add-int)
-user=> (find-arg [2 3 4] map '% [1 2 3]) ; Finds a function to pass to a higher order function
+user=> (find-arg tester [2 3 4] map '% [1 2 3]) ; Finds a function to pass to a higher order function
 (clojure.core/unchecked-inc-int clojure.core/unchecked-inc clojure.core/inc clojure.core/inc')
 ```
 
