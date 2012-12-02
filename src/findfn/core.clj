@@ -30,15 +30,22 @@
     (close [])
     (flush [])))
 
+(defn find-fn-for-pred
+  "Takes a predicate and expected input and runs every single function
+   and macro against the input, collecting the names of the ones where
+   (pred result) is true."
+  [tester pred & in]
+  (let [sb (sb/sandbox tester :timeout 200)]
+    (filter-vars
+      (fn [f]
+        (pred (sb `(~f ~@in) {#'*out* (null-writer)}))))))
+
 (defn find-fn
   "Takes expected output and expected input to produce that output and
    runs every single function and macro against the input, collecting the
    names of the ones that match the output."
   [tester out & in]
-  (let [sb (sb/sandbox tester :timeout 200)]
-    (filter-vars
-     (fn [f]
-       (= out (sb `(~f ~@in) {#'*out* (null-writer)}))))))
+  (apply find-fn-for-pred tester #(= % out) in))
 
 (defn find-arg
   "Basically find-fn for finding functions to pass to higher order functions. out is
